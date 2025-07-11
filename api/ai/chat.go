@@ -2,10 +2,8 @@ package ai
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
-
 	"github.com/openai/openai-go"
 )
 
@@ -48,7 +46,7 @@ var messages = []openai.ChatCompletionMessageParamUnion{
 	{
 		OfSystem: &openai.ChatCompletionSystemMessageParam{
 			Content: openai.ChatCompletionSystemMessageParamContentUnion{
-				OfString: openai.String(`You are a bingo creator. You will make bingo cards about me an my coworkers.
+				OfString: openai.String(`You are a bingo creator. You will make bingo cards.
 
                 You will respond with a list of bingo cards in JSON format.
 
@@ -78,27 +76,17 @@ var messages = []openai.ChatCompletionMessageParamUnion{
 	{
 		OfUser: &openai.ChatCompletionUserMessageParam{
 			Content: openai.ChatCompletionUserMessageParamContentUnion{
-				OfString: openai.String(`Can you write me a bingo board?
-                The coworkers are:
-                - Victor, a .NET developer with a passion for music.
-                - Ermin, a true runner and bosnian. Javascript developer.
-                - Leffe, a front-end developer with love for japanese culture.
-                - Ebba, a front-end developer who loves food.
-
-
-                `),
+				OfString: openai.String(`Can you write me a bingo board about common developer thropes?`),
 			},
 		},
 	},
 }
 
-func ChatCompletion() (string, error) {
+func AiGeneratedBoard() (string, error) {
 	client, err := CreateOpenAIClientWithToken("https://openaiv27t3uzcmxm4y.openai.azure.com", os.Getenv("OPENAI_API_VERSION"))
 	if err != nil {
 		return "", err
 	}
-
-	// azopenai.
 
 	resp, err := client.Chat.Completions.New(context.Background(), openai.ChatCompletionNewParams{
 
@@ -118,24 +106,6 @@ func ChatCompletion() (string, error) {
 	if err != nil {
 		log.Printf("ERROR: %s", err)
 		return "", err
-	}
-
-	gotReply := false
-
-	for _, choice := range resp.Choices {
-		gotReply = true
-
-		if choice.Message.Content != "" {
-			fmt.Fprintf(os.Stdout, "Content[%d]: %s\n", choice.Index, choice.Message.Content)
-		}
-
-		if choice.FinishReason != "" {
-			fmt.Fprintf(os.Stderr, "Finish reason[%d]: %s\n", choice.Index, choice.FinishReason)
-		}
-	}
-
-	if gotReply {
-		fmt.Fprintf(os.Stdout, "Got chat completions reply\n")
 	}
 
 	return resp.Choices[0].Message.Content, nil

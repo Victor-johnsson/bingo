@@ -6,6 +6,7 @@ import (
 	"bingo/otelx"
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -30,7 +31,6 @@ var (
 	responseTimeHistogram metric.Int64Histogram
 )
 
-
 func setupRouter() *gin.Engine {
 	// Disable Console Color
 	// gin.DisableConsoleColor()
@@ -41,47 +41,44 @@ func setupRouter() *gin.Engine {
 
 	boards := map[string]*board.Board{}
 
-	r.GET("/test", func(c *gin.Context) {
-		resp, err := ai.ChatCompletion()
-		if err != nil {
-			c.String(http.StatusInternalServerError, err.Error())
-			return
-		}
-		c.String(http.StatusOK, resp)
-
-
-	})
-	// Ping test
-	r.GET("/ping", func(c *gin.Context) {
-		// _, span := tracer.Start(c.Request.Context(), "ping")
-		// defer span.End()
-		c.String(http.StatusOK, "pong")
-	})
-
 	r.GET("/board/:name", func(c *gin.Context) {
 		name := c.Params.ByName("name")
+		fmt.Println("name", name)
 
-		resp, err := ai.ChatCompletion()
-		if err != nil {
-			c.String(http.StatusInternalServerError, err.Error())
-			return
-		}
-
+		// Get the board from the map
 		theBoard := boards[name]
+
+
+		// If it doesn't exist in the map, create it
 		if theBoard == nil {
 
-            theBoard := board.Board{}
-            marshErr :=json.Unmarshal([]byte(resp), &theBoard)
-            log.Printf("Response: %s", resp)
-            if marshErr != nil {
-                c.String(http.StatusInternalServerError, marshErr.Error())
-                return
-            }
-			boards[name] = &theBoard
+			fmt.Println("board not found")
+			// Create a new board instance. Note we are creating a pointer.
+			newBoard := &board.Board{}
+
+			resp, err := ai.AiGeneratedBoard()
+			if err != nil {
+				c.String(http.StatusInternalServerError, err.Error())
+				return
+			}
+
+			// Unmarshal the AI response into our new instance
+			marshErr := json.Unmarshal([]byte(resp), newBoard)
+
+			if marshErr != nil {
+				c.String(http.StatusInternalServerError, marshErr.Error())
+				return
+			}
+
+			// Assign the newly created and populated board to the map
+			boards[name] = newBoard
+
+			// Also assign it to our local variable for the final response
+			theBoard = newBoard
 		}
 
+		// This will now correctly send either the board from the map or the newly created one.
 		c.JSON(http.StatusOK, theBoard)
-
 	})
 
 	return r
