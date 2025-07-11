@@ -21,7 +21,7 @@ func NewBoard(name string) *Board {
                 Question: "What is the capital of Italy?",
                 Answered: false,
             },
-            {
+           {
                 Name: "D",
                 Question: "What is the capital of Spain?",
                 Answered: false,
