@@ -1,17 +1,18 @@
 package main
 
 import (
-	"bingo/ai"
 	"bingo/board"
 	"bingo/otelx"
 	"context"
 	"encoding/json"
-	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/gin-contrib/cors"
 
 	"github.com/gin-gonic/gin"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
@@ -38,45 +39,43 @@ func setupRouter() *gin.Engine {
 	r := gin.Default()
 	r.Use(otelgin.Middleware(name))
 	r.Use(monitorInterceptor())
-
-	boards := map[string]*board.Board{}
+	r.Use(cors.Default())
 
 	r.GET("/board/:name", func(c *gin.Context) {
 		name := c.Params.ByName("name")
-		fmt.Println("name", name)
 
 		// Get the board from the map
-		theBoard := boards[name]
+		theBoard, err := board.GetBoard(name)
 
+		if err != nil {
+			c.String(http.StatusInternalServerError, err.Error())
+			return
+		}
+		// This will now correctly send either the board from the map or the newly created one.
+		c.JSON(http.StatusOK, theBoard)
+	})
+	r.PUT("/board/:name", func(c *gin.Context) {
+		name := c.Params.ByName("name")
 
-		// If it doesn't exist in the map, create it
-		if theBoard == nil {
-
-			fmt.Println("board not found")
-			// Create a new board instance. Note we are creating a pointer.
-			newBoard := &board.Board{}
-
-			resp, err := ai.AiGeneratedBoard()
-			if err != nil {
-				c.String(http.StatusInternalServerError, err.Error())
-				return
-			}
-
-			// Unmarshal the AI response into our new instance
-			marshErr := json.Unmarshal([]byte(resp), newBoard)
-
-			if marshErr != nil {
-				c.String(http.StatusInternalServerError, marshErr.Error())
-				return
-			}
-
-			// Assign the newly created and populated board to the map
-			boards[name] = newBoard
-
-			// Also assign it to our local variable for the final response
-			theBoard = newBoard
+		body, readErr := io.ReadAll(c.Request.Body)
+		if readErr != nil {
+			c.String(http.StatusInternalServerError, readErr.Error())
+			return
 		}
 
+		square := board.Square{}
+		marshErr := json.Unmarshal(body, &square)
+		if marshErr != nil {
+			c.String(http.StatusInternalServerError, marshErr.Error())
+			return
+		}
+
+		// Get the board from the map
+        theBoard, err := board.UpdateBoard(name, square)
+		if err != nil {
+			c.String(http.StatusInternalServerError, err.Error())
+			return
+		}
 		// This will now correctly send either the board from the map or the newly created one.
 		c.JSON(http.StatusOK, theBoard)
 	})
