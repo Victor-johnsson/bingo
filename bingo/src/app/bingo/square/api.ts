@@ -1,16 +1,16 @@
 // api.ts
 
-interface Board {
+export interface Board {
 
     Name: string;
     Category: string;
     Squares: Question[];
 
 }
-interface Question {
-  Name: string;
-  Question: string;
-  Answered: boolean;
+export interface Question {
+    Name: string;
+    Question: string;
+    Answered: boolean;
 }
 
 /**
@@ -20,47 +20,66 @@ interface Question {
  * @throws Will throw an error if the network request fails or the server
  * responds with an error status.
  */
+
 export const fetchBingoData = async (
-  apiUrl: string,
+    apiUrl: string,
 ): Promise<Board> => {
-  console.log('Fetching data from API...');
+    console.log('Fetching data from API...');
 
-  try {
-    // Make the network request to the provided URL
-    const response = await fetch(apiUrl + "/board/test");
+    try {
+        // Make the network request to the provided URL
+        const response = await fetch(apiUrl + "/board/test");
 
-    // Check if the request was successful (status in the 200-299 range)
-    if (!response.ok) {
-      // If not, throw an error with the status text
-      throw new Error(`HTTP error! Status: ${response.status}`);
+        // Check if the request was successful (status in the 200-299 range)
+        if (!response.ok) {
+            // If not, throw an error with the status text
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+
+        // console.log("Response: ", await response.text());
+        // Parse the JSON body of the response
+        const data: Board = await response.json();
+
+        console.log("Board data: ", data);
+        return data;
+    } catch (error) {
+        // Log and re-throw the error for the calling code to handle
+        console.error('Failed to fetch bingo data:', error);
+        throw error;
     }
-
-    // Parse the JSON body of the response
-    const data: Board = await response.json();
-
-    console.log('Data fetched successfully!');
-    return data;
-  } catch (error) {
-    // Log and re-throw the error for the calling code to handle
-    console.error('Failed to fetch bingo data:', error);
-    throw error;
-  }
 };
 
-// --- Example Usage ---
+export const updateSquare = async (
+    apiUrl: string, question: Question
+): Promise<Board> => {
 
-// const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-// const BINGO_API_URL =
-//   'https://api.example.com/bingo/developer-tropes'; // <-- Replace with your real URL
-//
-// // You can use the function with .then() and .catch()
-// fetchBingoData(BINGO_API_URL)
-//   .then((bingoData) => {
-//     console.log('Bingo Board Name:', bingoData.Name);
-//     // Now you can use the data to render your bingo board
-//         return bingoData;
-//   })
-//   .catch((error) => {
-//     console.error('An error occurred while loading the bingo board.');
-//     // Handle the error, e.g., show an error message to the user
-//   });
+    try {
+        // Make the network request to the provided URL
+        question.Answered = true;
+        const body = JSON.stringify(question);
+        const headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+        };
+        const response = await fetch(apiUrl + "/board/test", {
+            method: 'PUT',
+            headers: headers,
+            body: body,
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+
+        }
+
+        const data: Board = await response.json();
+
+        console.log('Data fetched successfully!');
+        return data;
+    } catch (error) {
+        // Log and re-throw the error for the calling code to handle
+        console.error('Failed to fetch bingo data:', error);
+        throw error;
+    }
+};
