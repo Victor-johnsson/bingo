@@ -63,7 +63,7 @@ func setupRouter() *gin.Engine {
 			return
 		}
 
-		square := board.Square{}
+		square := board.Question{}
 		marshErr := json.Unmarshal(body, &square)
 		if marshErr != nil {
 			c.String(http.StatusInternalServerError, marshErr.Error())
@@ -79,6 +79,27 @@ func setupRouter() *gin.Engine {
 		// This will now correctly send either the board from the map or the newly created one.
 		c.JSON(http.StatusOK, theBoard)
 	})
+
+    r.GET("/questions", func(c *gin.Context) {
+        questions := board.GetQuestions()
+        c.JSON(http.StatusOK, questions)
+    })
+
+    r.POST("/questions", func(c *gin.Context) {
+        body, readErr := io.ReadAll(c.Request.Body)
+        if readErr != nil {
+            c.String(http.StatusInternalServerError, readErr.Error())
+            return
+        }
+        question := board.Question{}
+        marshErr := json.Unmarshal(body, &question)
+        if marshErr != nil {
+            c.String(http.StatusInternalServerError, marshErr.Error())
+            return
+        }
+        board.AddQuestion(question)
+        c.JSON(http.StatusOK, question)
+    })
 
 	return r
 }

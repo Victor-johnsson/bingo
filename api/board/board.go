@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 )
 
-func (b *Board) GetSquare(name string) *Square {
+func (b *Board) GetSquare(name string) *Question {
 	for _, square := range b.Squares {
 		if square.Name == name {
 			return &square
@@ -15,6 +15,7 @@ func (b *Board) GetSquare(name string) *Square {
 }
 
 var boards = map[string]*Board{}
+var questions = []Question{}
 
 func GetBoard(name string) (*Board, error) {
 
@@ -42,21 +43,28 @@ func GetBoard(name string) (*Board, error) {
 
 }
 
-func UpdateBoard(name string, square Square) (*Board, error) {
+func AddQuestion(question Question)  {
+	questions = append(questions, question)
+}
+
+func GetQuestions () []Question {
+	return questions
+}
+func UpdateBoard(name string, square Question) (*Board, error) {
 
 	// Get the board from the map
 	theBoard := boards[name]
 	if theBoard == nil {
-        return nil, nil
+		return nil, nil
 	}
 
-    for i, s := range theBoard.Squares {
-        if s.Name != square.Name {
-            continue
-        }
-        theBoard.Squares[i] = square
-        break;
-    }
+	for i, s := range theBoard.Squares {
+		if s.Name != square.Name {
+			continue
+		}
+		theBoard.Squares[i] = square
+		break
+	}
 	return theBoard, nil
 
 }
@@ -71,10 +79,10 @@ func (b *Board) AnswerSquare(name string) {
 type Board struct {
 	Name     string
 	Category string
-	Squares  []Square
+	Squares  []Question
 }
 
-type Square struct {
+type Question struct {
 	Name     string
 	Question string
 	Answered bool

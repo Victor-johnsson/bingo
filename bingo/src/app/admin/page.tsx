@@ -1,5 +1,6 @@
 'use client';
-import { QuestionGrid } from "./square/square";
+import { QuestionForm } from "../admin/admin";
+
 
 export default function Home() {
 
@@ -7,6 +8,6 @@ export default function Home() {
 
     return (
         <div>
-            <QuestionGrid  />
+            <QuestionForm />
         </div>)
 }

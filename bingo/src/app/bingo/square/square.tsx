@@ -1,5 +1,6 @@
 'use client';
-import { updateSquare, fetchBingoData, Question, Board } from './api';
+import { updateSquare, fetchBingoData } from './api';
+import { Question } from '../../models/models';
 import React, { useState, useEffect } from 'react';
 import nextConfig from '../../../../next.config';
 

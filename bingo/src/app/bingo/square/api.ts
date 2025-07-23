@@ -1,17 +1,8 @@
 // api.ts
+//
+import { getISOWeek } from 'date-fns';
+import { Board, Question } from '../../models/models';
 
-export interface Board {
-
-    Name: string;
-    Category: string;
-    Squares: Question[];
-
-}
-export interface Question {
-    Name: string;
-    Question: string;
-    Answered: boolean;
-}
 
 /**
  * Fetches bingo data from the API.
@@ -28,7 +19,10 @@ export const fetchBingoData = async (
 
     try {
         // Make the network request to the provided URL
-        const response = await fetch(apiUrl + "/board/test");
+        const currentWeek = getISOWeek(new Date());
+
+
+        const response = await fetch(apiUrl + "/board/" + currentWeek);
 
         // Check if the request was successful (status in the 200-299 range)
         if (!response.ok) {
